@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar, DollarSign, Tag, FileText, Check, X } from "lucide-react"
+import { getCategoryIcon, getCategoryColor } from "@/utils/category-icons"
+import { Calendar, DollarSign, FileText, Check, X } from "lucide-react"
 import type { Expense } from "@/types"
 
 interface ExpenseFormProps {
@@ -56,25 +57,6 @@ export function ExpenseForm({ expense, categories, onSubmit, onCancel }: Expense
     setIsSubmitting(false)
   }
 
-  const getCategoryColor = (cat: string) => {
-    const colors = {
-      Food: "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800",
-      Transport:
-        "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800",
-      Shopping:
-        "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800",
-      Entertainment:
-        "bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900/20 dark:text-pink-300 dark:border-pink-800",
-      Bills: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800",
-      Healthcare:
-        "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800",
-      Education:
-        "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800",
-      Other: "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-300 dark:border-gray-800",
-    }
-    return colors[cat as keyof typeof colors] || colors.Other
-  }
-
   const isFormValid = amount && date && category
 
   return (
@@ -116,24 +98,34 @@ export function ExpenseForm({ expense, categories, onSubmit, onCancel }: Expense
         {/* Category Selection */}
         <div className="space-y-3">
           <Label className="flex items-center gap-2 text-base font-medium text-gray-700 dark:text-gray-300">
-            <Tag className="h-4 w-4" />
             What category?
           </Label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setCategory(cat)}
-                className={`p-3 rounded-xl border-2 text-sm font-medium transition-all duration-200 hover:scale-105 ${
-                  category === cat
-                    ? getCategoryColor(cat) + " ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-800"
-                    : "bg-white border-gray-200 text-gray-700 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const CategoryIcon = getCategoryIcon(cat)
+              const colors = getCategoryColor(cat)
+              const isSelected = category === cat
+
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategory(cat)}
+                  className={`p-4 rounded-xl border-2 text-sm font-medium transition-all duration-200 hover:scale-105 ${
+                    isSelected
+                      ? `${colors.bg} ${colors.text} ${colors.border} ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-gray-800 shadow-lg`
+                      : "bg-white border-gray-200 text-gray-700 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:border-gray-500 hover:shadow-md"
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <CategoryIcon
+                      className={`h-6 w-6 ${isSelected ? colors.icon : "text-gray-500 dark:text-gray-400"}`}
+                    />
+                    <span>{cat}</span>
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
 

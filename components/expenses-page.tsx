@@ -190,7 +190,8 @@ export function ExpensesPage() {
             }`}
           >
             <Filter className="h-4 w-4 mr-2" />
-            Filters {hasActiveFilters && `(${filteredExpenses.length})`}
+            <span className="hidden sm:inline">Filters</span>
+            {hasActiveFilters && <span className="ml-1">({filteredExpenses.length})</span>}
           </Button>
           <Button
             onClick={() => setShowExportDialog(true)}
@@ -198,7 +199,7 @@ export function ExpensesPage() {
             className="dark:border-gray-600 dark:hover:bg-gray-700 hover:shadow-md transition-all duration-200"
           >
             <Download className="h-4 w-4 mr-2" />
-            Export
+            <span className="hidden sm:inline">Export</span>
           </Button>
           <Button
             onClick={() => setShowForm(true)}

@@ -8,7 +8,9 @@ import { Progress } from "@/components/ui/progress"
 import { MonthSelector } from "@/components/month-selector"
 import { SpendingChart } from "@/components/spending-chart"
 import { DailySpendingChart } from "@/components/daily-spending-chart"
-import { DollarSign, TrendingDown, TrendingUp, Wallet, Sparkles } from "lucide-react"
+import { RecentExpenses } from "@/components/recent-expenses"
+import { CategoryBreakdown } from "@/components/category-breakdown"
+import { TrendingDown, Wallet, Target, AlertTriangle, CheckCircle, Activity } from "lucide-react"
 
 export function Dashboard() {
   const { expenses } = useExpenses()
@@ -30,6 +32,12 @@ export function Dashboard() {
   const totalSpent = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0)
   const remaining = totalBudget - totalSpent
   const spentPercentage = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
+  const isOverBudget = totalSpent > totalBudget && totalBudget > 0
+
+  // Calculate average daily spending
+  const daysInMonth = new Date(year, monthIndex + 1, 0).getDate()
+  const currentDay = selectedMonth === currentMonthKey ? currentDate.getDate() : daysInMonth
+  const avgDailySpending = currentDay > 0 ? totalSpent / currentDay : 0
 
   const stats = [
     {
@@ -37,32 +45,43 @@ export function Dashboard() {
       value: `$${totalBudget.toFixed(2)}`,
       icon: Wallet,
       color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-50 dark:bg-blue-900/20",
-      iconBg: "bg-blue-100 dark:bg-blue-900/30",
+      bgGradient: "from-blue-500 to-blue-600",
+      cardBg: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20",
+      change: totalBudget > 0 ? "+100%" : "0%",
+      changeColor: "text-blue-600 dark:text-blue-400",
     },
     {
       title: "Total Spent",
       value: `$${totalSpent.toFixed(2)}`,
       icon: TrendingDown,
       color: "text-red-600 dark:text-red-400",
-      bgColor: "bg-red-50 dark:bg-red-900/20",
-      iconBg: "bg-red-100 dark:bg-red-900/30",
+      bgGradient: "from-red-500 to-red-600",
+      cardBg: "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20",
+      change: `${spentPercentage.toFixed(1)}%`,
+      changeColor: isOverBudget ? "text-red-600 dark:text-red-400" : "text-orange-600 dark:text-orange-400",
     },
     {
       title: "Remaining",
-      value: `$${remaining.toFixed(2)}`,
-      icon: TrendingUp,
+      value: `$${Math.abs(remaining).toFixed(2)}`,
+      icon: remaining >= 0 ? CheckCircle : AlertTriangle,
       color: remaining >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
-      bgColor: remaining >= 0 ? "bg-green-50 dark:bg-green-900/20" : "bg-red-50 dark:bg-red-900/20",
-      iconBg: remaining >= 0 ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30",
+      bgGradient: remaining >= 0 ? "from-green-500 to-green-600" : "from-red-500 to-red-600",
+      cardBg:
+        remaining >= 0
+          ? "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20"
+          : "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20",
+      change: remaining >= 0 ? "On track" : "Over budget",
+      changeColor: remaining >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
     },
     {
-      title: "Total Expenses",
-      value: monthExpenses.length.toString(),
-      icon: Sparkles,
+      title: "Daily Average",
+      value: `$${avgDailySpending.toFixed(2)}`,
+      icon: Activity,
       color: "text-purple-600 dark:text-purple-400",
-      bgColor: "bg-purple-50 dark:bg-purple-900/20",
-      iconBg: "bg-purple-100 dark:bg-purple-900/30",
+      bgGradient: "from-purple-500 to-purple-600",
+      cardBg: "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20",
+      change: `${monthExpenses.length} expenses`,
+      changeColor: "text-purple-600 dark:text-purple-400",
     },
   ]
 
@@ -72,66 +91,112 @@ export function Dashboard() {
   })
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-            Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">Overview of your finances for {selectedMonthLabel}</p>
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-8 text-white shadow-2xl">
+        <div className="absolute inset-0 bg-black/10" />
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">Financial Dashboard</h1>
+              <p className="text-blue-100 text-lg">
+                Your complete overview for <span className="font-semibold">{selectedMonthLabel}</span>
+              </p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-1">
+              <MonthSelector selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
+            </div>
+          </div>
         </div>
-        <MonthSelector selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
+        <div className="absolute -top-4 -right-4 w-32 h-32 bg-white/5 rounded-full" />
+        <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-white/5 rounded-full" />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {stats.map((stat) => (
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
           <Card
             key={stat.title}
-            className={`dark:border-gray-700 border-0 shadow-lg ${stat.bgColor} hover:shadow-xl transition-all duration-200 transform hover:scale-105`}
+            className={`border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 ${stat.cardBg} overflow-hidden group`}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.title}</CardTitle>
-              <div className={`p-2 rounded-lg ${stat.iconBg}`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">{stat.title}</CardTitle>
+              <div
+                className={`p-3 rounded-xl bg-gradient-to-br ${stat.bgGradient} shadow-lg group-hover:scale-110 transition-transform duration-300`}
+              >
+                <stat.icon className="h-5 w-5 text-white" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-xl md:text-2xl font-bold ${stat.color}`}>{stat.value}</div>
+              <div className={`text-2xl md:text-3xl font-bold ${stat.color} mb-1`}>{stat.value}</div>
+              <p className={`text-xs font-medium ${stat.changeColor} flex items-center gap-1`}>
+                <Target className="h-3 w-3" />
+                {stat.change}
+              </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
+      {/* Budget Progress */}
       {totalBudget > 0 && (
-        <Card className="dark:bg-gray-800 dark:border-gray-700 shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
           <CardHeader>
-            <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <DollarSign className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+                <Target className="h-6 w-6 text-white" />
               </div>
               Budget Progress
+              {isOverBudget && <AlertTriangle className="h-5 w-5 text-red-500 animate-pulse" />}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Spent: ${totalSpent.toFixed(2)}</span>
-                <span className="text-gray-600 dark:text-gray-400">Budget: ${totalBudget.toFixed(2)}</span>
-              </div>
-              <Progress value={Math.min(spentPercentage, 100)} className="h-3" />
-              <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                {spentPercentage > 100
-                  ? `Over budget by $${(totalSpent - totalBudget).toFixed(2)}`
-                  : `${(100 - spentPercentage).toFixed(1)}% remaining`}
-              </p>
+          <CardContent className="space-y-6">
+            <div className="flex justify-between text-sm font-medium">
+              <span className="text-gray-600 dark:text-gray-400">
+                Spent: <span className="text-gray-900 dark:text-white">${totalSpent.toFixed(2)}</span>
+              </span>
+              <span className="text-gray-600 dark:text-gray-400">
+                Budget: <span className="text-gray-900 dark:text-white">${totalBudget.toFixed(2)}</span>
+              </span>
+            </div>
+            <div className="relative">
+              <Progress value={Math.min(spentPercentage, 100)} className="h-4 bg-gray-200 dark:bg-gray-700" />
+              {spentPercentage > 100 && (
+                <div
+                  className="absolute top-0 left-0 h-4 bg-gradient-to-r from-red-500 to-red-600 rounded-full animate-pulse"
+                  style={{ width: "100%" }}
+                />
+              )}
+            </div>
+            <div className="text-center">
+              {isOverBudget ? (
+                <div className="flex items-center justify-center gap-2 text-red-600 dark:text-red-400 font-semibold">
+                  <AlertTriangle className="h-4 w-4" />
+                  Over budget by ${(totalSpent - totalBudget).toFixed(2)} ({(spentPercentage - 100).toFixed(1)}%)
+                </div>
+              ) : (
+                <p className="text-gray-600 dark:text-gray-400 font-medium">
+                  <span className="text-green-600 dark:text-green-400 font-semibold">
+                    {(100 - spentPercentage).toFixed(1)}%
+                  </span>{" "}
+                  of budget remaining
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <SpendingChart expenses={monthExpenses} />
-        <DailySpendingChart expenses={monthExpenses} />
+      {/* Charts and Recent Activity */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2 space-y-6">
+          <SpendingChart expenses={monthExpenses} />
+          <DailySpendingChart expenses={monthExpenses} />
+        </div>
+        <div className="space-y-6">
+          <CategoryBreakdown expenses={monthExpenses} />
+          <RecentExpenses expenses={monthExpenses.slice(0, 5)} />
+        </div>
       </div>
     </div>
   )
